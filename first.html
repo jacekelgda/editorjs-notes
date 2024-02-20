@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Notes</title>
+    <base href="/" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <div id="editorjs"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@latest"></script>
+    <!-- PLUGINS -->
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/underline@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/editorjs-text-color-plugin@2.0.4/dist/bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/marker@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/inline-code@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/header@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/checklist@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/nested-list@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/embed@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@2.6.0/dist/quote.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/warning@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/code@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/table@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/raw@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/delimiter@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/editorjs-drag-drop"></script>
+    <script src="https://cdn.jsdelivr.net/npm/editorjs-undo"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/link-autocomplete"></script>
+    <!-- EDITOR SETUP -->
+    <script>
+      const IconH1 =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M6 7L6 12M6 17L6 12M6 12L12 12M12 7V12M12 17L12 12"/><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M19 17V10.2135C19 10.1287 18.9011 10.0824 18.836 10.1367L16 12.5"/></svg>';
+      const IconH2 =
+        '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M6 7L6 12M6 17L6 12M6 12L12 12M12 7V12M12 17L12 12"/><path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M16 11C16 10 19 9.5 19 12C19 13.9771 16.0684 13.9997 16.0012 16.8981C15.9999 16.9533 16.0448 17 16.1 17L19.3 17"/></svg>';
+
+      const editor = new EditorJS({
+        holder: "editorjs",
+        onChange: async (api) => {
+          const data = await api.saver.save();
+          console.log(data);
+          const response = await fetch("http://localhost:3002/block", {
+            method: "POST",
+            body: JSON.stringify(data),
+            headers: {
+              "Content-type": "application/json; charset=UTF-8",
+            },
+          });
+          const movies = await response.json();
+        },
+        placeholder: "Type your text here",
+        tools: {
+          link: {
+            class: LinkAutocomplete,
+            config: {
+              endpoint: "http://localhost:3002/search/by-text",
+              queryParam: "title",
+            },
+          },
+          underline: {
+            class: Underline,
+            shortcut: "CMD+U",
+          },
+          Color: {
+            class: ColorPlugin,
+            config: {
+              colorCollections: [
+                "#EC7878",
+                "#9C27B0",
+                "#673AB7",
+                "#3F51B5",
+                "#0070FF",
+                "#03A9F4",
+                "#00BCD4",
+                "#4CAF50",
+                "#8BC34A",
+                "#CDDC39",
+                "#FFF",
+              ],
+              defaultColor: "#000",
+              type: "text",
+              customPicker: true,
+            },
+          },
+          Marker: {
+            class: Marker,
+            shortcut: "CMD+ALT+M",
+          },
+          inlineCode: {
+            class: InlineCode,
+            shortcut: "CMD+ALT+C",
+          },
+          header: {
+            class: Header,
+            toolbox: [
+              {
+                title: "Title",
+                subtitle: "Description",
+                icon: IconH1,
+                data: {
+                  level: 2,
+                },
+              },
+            ],
+            shortcut: "CMD+ALT+T",
+            inlineToolbar: true,
+            config: {
+              levels: [2],
+              defaultLevel: 2,
+            },
+          },
+          subtitle: {
+            class: Header,
+            toolbox: [
+              {
+                title: "Subtitle",
+                icon: IconH2,
+                data: {
+                  level: 3,
+                },
+              },
+            ],
+            shortcut: "CMD+ALT+J",
+            inlineToolbar: true,
+            config: {
+              levels: [3],
+              defaultLevel: 3,
+            },
+          },
+          checklist: {
+            class: Checklist,
+            inlineToolbar: true,
+          },
+          list: {
+            class: NestedList,
+            inlineToolbar: true,
+            config: {
+              defaultStyle: "unordered",
+            },
+          },
+          embed: {
+            class: Embed,
+            config: {
+              services: {
+                youtube: true,
+                vimeo: true,
+                zoom: {
+                  regex:
+                    /(?:https?:\/\/)?([^/?&.]*)?(?:\.?zoom\.us\/rec\/(play|share)\/)([^/]*)/i,
+                  embedUrl: "<%= remote_id %>",
+                  html: "<iframe height='300' scrolling='no' frameborder='no' allowtransparency='true' allowfullscreen='true' style='width: 100%;'></iframe>",
+                  id: (groups) =>
+                    `https://${groups[0] ? `${groups[0]}.` : ""}zoom.us/rec/${
+                      groups[1]
+                    }/${groups[2]}`,
+                },
+                loom: {
+                  regex:
+                    /(?:https?:\/\/)?(?:www\.)?(?:loom\.com\/share)\/([^#&?=]*)([^]*)/i,
+                  embedUrl:
+                    "https://www.loom.com/embed/<%= remote_id %>?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
+                  html: "<iframe height='300' scrolling='no' frameborder='no' allowtransparency='true' allowfullscreen='true' style='width: 100%;'></iframe>",
+                  id: (groups) => groups[0],
+                },
+
+                drive: {
+                  regex:
+                    /(?:https?:\/\/)?(?:www\.)?(?:docs\.google\.com\/spreadsheets\/d)\/e\/([^#&?=]*)([^]*)/i,
+                  embedUrl:
+                    "https://docs.google.com/spreadsheets/d/e/<%= remote_id %>",
+                  html: "<iframe height='1000' scrolling='yes' frameborder='no' allowtransparency='true' allowfullscreen='true'></iframe>",
+                  id: (groups) => groups[0],
+                },
+              },
+            },
+          },
+          quote: {
+            class: Quote,
+            shortcut: "CMD+ALT+.",
+            inlineToolbar: true,
+            config: {
+              quotePlaceholder: "Quote",
+              captionPlaceholder: "Quote`s author",
+            },
+          },
+          warning: {
+            class: Warning,
+            shortcut: "CMD+ALT+1",
+            inlineToolbar: true,
+          },
+          code: CodeTool,
+          table: {
+            class: Table,
+            inlineToolbar: true,
+            config: {
+              rows: 2,
+              cols: 3,
+            },
+          },
+          raw: {
+            class: RawTool,
+            inlineToolbar: true,
+          },
+          delimiter: Delimiter,
+        },
+        onReady: () => {
+          new Undo({ editor });
+          new DragDrop(editor, "2px dashed rgba(87, 103, 161, 0.5)");
+        },
+      });
+    </script>
+  </body>
+</html>

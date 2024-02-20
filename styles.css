@@ -1,0 +1,11 @@
+#editorjs {
+  border: 1px solid #eee;
+}
+
+.tiny {
+  font-size: 12px;
+}
+
+.bg-muted {
+  background-color: #eee;
+}
